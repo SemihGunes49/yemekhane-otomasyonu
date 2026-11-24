@@ -1,5 +1,5 @@
-# Aşama 2
+# Aşama 3
 
-Express Web API, HTML/CSS/JavaScript ekranları ve bellekte geçici oturumlar.
+Redis menü önbelleği ve Redis oturumları. Porsiyon ve kişisel alerjen migration’ı dördüncü aşamadadır.
 
 Bu kontrol noktası teslim hazırlığında geriye dönük oluşturuldu.

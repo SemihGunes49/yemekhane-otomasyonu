@@ -1,7 +1,7 @@
 const express = require('express');
 const { randomBytes } = require('node:crypto');
 const bcrypt = require('bcryptjs');
-const oturumlar = new Map();
+const { redis, baslat } = require('./redis');
 const veriKatmani = require('./veri');
 const menu = require('./menu');
 
@@ -49,10 +49,8 @@ function token(req) {
 
 async function kimlikDogrula(req, res, next) {
   const anahtar = token(req);
-  const mevcut = oturumlar.get(anahtar);
-  req.kullanici = mevcut?.bitis > Date.now() ? mevcut.kullanici : null;
-  if (req.kullanici) mevcut.bitis = Date.now() + oturumSuresi * 1000;
-  else if (mevcut) oturumlar.delete(anahtar);
+  const ham = anahtar && await redis.getEx('oturum:' + anahtar, { type: 'EX', value: oturumSuresi });
+  req.kullanici = ham ? JSON.parse(ham) : null;
   if (req.kullanici) res.cookie('oturum', anahtar, { httpOnly: true, sameSite: 'lax', maxAge: oturumSuresi * 1000 });
   next();
 }
@@ -77,17 +75,17 @@ app.post('/api/giris', async (req, res) => {
   const hesap = await veriKatmani.hesap(eposta.trim());
   if (!hesap || !await bcrypt.compare(sifre, hesap.sifre_hash)) throw sorun(401, 'E-posta veya şifre hatalı.');
   const eski = token(req);
-  if (eski) oturumlar.delete(eski);
+  if (eski) await redis.del('oturum:' + eski);
   const yeni = randomBytes(32).toString('hex');
   const { sifre_hash, ...kullanici } = hesap;
-  oturumlar.set(yeni, { kullanici, bitis: Date.now() + oturumSuresi * 1000 });
+  await redis.set('oturum:' + yeni, JSON.stringify(kullanici), { expiration: { type: 'EX', value: oturumSuresi } });
   res.cookie('oturum', yeni, { httpOnly: true, sameSite: 'lax', maxAge: oturumSuresi * 1000 });
   res.json(kullanici);
 });
 
 app.post('/api/cikis', async (req, res) => {
   const mevcut = token(req);
-  if (mevcut) oturumlar.delete(mevcut);
+  if (mevcut) await redis.del('oturum:' + mevcut);
   res.clearCookie('oturum', { httpOnly: true, sameSite: 'lax' });
   res.json({ tamam: true });
 });
@@ -110,11 +108,36 @@ function istanbulGunu() {
   };
 }
 
+const menuAnahtari = (yemekhaneId, gun, ogunId) => `menu:${yemekhaneId}:${gun}:${ogunId}`;
+
 app.get('/api/menuler/bugun', async (req, res) => {
   const yemekhaneId = kimlik(req.query.yemekhaneId ?? 2);
   const ogunId = kimlik(req.query.ogunId ?? 1);
   const { gun, sure } = istanbulGunu();
-  const yemekler = await menu.bugun(gun, yemekhaneId, ogunId);
+  const anahtar = menuAnahtari(yemekhaneId, gun, ogunId);
+  const surum = await redis.get('menu-degisiklik') || '';
+  const beklenenGtid = await redis.get('menu-bekleyen:' + anahtar);
+  if (beklenenGtid && !await veriKatmani.replikayiBekle(beklenenGtid)) {
+    throw sorun(503, 'Menü güncelleniyor. Biraz sonra tekrar deneyin.');
+  }
+  let yemekler;
+  if (beklenenGtid) {
+    await redis.eval("if redis.call('GET',KEYS[1]) == ARGV[1] then return redis.call('DEL',KEYS[1]) end",
+      { keys: ['menu-bekleyen:' + anahtar], arguments: [beklenenGtid] });
+  }
+  const ham = await redis.get(anahtar);
+  if (ham) {
+    yemekler = JSON.parse(ham);
+    console.info('Menü Redis', anahtar);
+  } else {
+    yemekler = await menu.bugun(gun, yemekhaneId, ogunId);
+    await redis.eval(
+      "if (redis.call('GET',KEYS[2]) or '') == ARGV[1] then return redis.call('SET',KEYS[1],ARGV[2],'EX',ARGV[3]) end",
+      { keys: [anahtar, 'menu-degisiklik'], arguments: [surum, JSON.stringify(yemekler), String(Math.max(1, sure))] }
+    );
+    console.info('Menü MySQL', anahtar);
+  }
+  res.set('Cache-Control', 'no-store');
   res.json(yemekler);
 });
 
@@ -191,6 +214,15 @@ async function menuKaydet(req, res) {
   };
   const kayit = await menu.kaydet(id, secim);
   if (!kayit) throw sorun(404, 'Menü bulunamadı.');
+  const anahtarlar = [menuAnahtari(secim.yemekhaneId, secim.tarih, secim.ogunId)];
+  if (kayit.eski) anahtarlar.push(menuAnahtari(kayit.eski.yemekhane_id, kayit.eski.tarih, kayit.eski.ogun_id));
+  const gtid = await veriKatmani.kaynakGtid();
+  const yenile = redis.multi().incr('menu-degisiklik').del([...new Set(anahtarlar)]);
+  for (const anahtar of anahtarlar) yenile.set('menu-bekleyen:' + anahtar, gtid, { EX: 86400 });
+  await yenile.exec();
+  if (!await veriKatmani.replikayiBekle(gtid)) {
+    return res.status(202).json({ id: kayit.id, uyari: 'Menü kaydedildi. Replikasyon henüz güncel değil.' });
+  }
   res.status(id ? 200 : 201).json({ id: kayit.id });
 }
 
@@ -208,4 +240,7 @@ app.use((hata, req, res, next) => {
   res.status(500).json({ hata: 'Sunucu işlemi tamamlayamadı.' });
 });
 
-app.listen(Number(process.env.PORT || 8000), '0.0.0.0');
+baslat().then(() => app.listen(Number(process.env.PORT || 8000), '0.0.0.0', () => console.info('Yemekhane API hazır.'))).catch(hata => {
+  console.error(hata);
+  process.exit(1);
+});
