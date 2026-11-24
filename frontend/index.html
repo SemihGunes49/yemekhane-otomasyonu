@@ -1,1 +1,89 @@
-<meta charset="utf-8"><title>Yemekhane Otomasyonu</title><h1>Yemekhane Otomasyonu</h1><p>Apache çalışıyor.</p>
+<!doctype html>
+<html lang="tr">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Yemekhane Otomasyonu</title>
+  <link rel="stylesheet" href="/css/uygulama.css">
+  <script src="/panel.js" defer></script>
+</head>
+<body>
+  <header class="ust">
+    <a class="marka" href="/">Yemekhane Otomasyonu</a>
+    <nav aria-label="Ana menü">
+      <a href="/menu.html">Günün menüsü</a>
+      <a data-oturum hidden href="#hafta">Haftalık menü</a>
+      <a data-oturum hidden href="#rezervasyon">Rezervasyonlarım</a>
+      <a data-oturum hidden href="#bakiye">Bakiye</a>
+      <a data-oturum hidden href="#degerlendirme">Değerlendirme</a>
+      <a id="yonetim-baglanti" hidden href="#yonetim">Yönetim</a>
+      <button id="cikis" data-oturum hidden type="button">Çıkış</button>
+    </nav>
+  </header>
+  <main>
+    <p id="kullanici" class="ikincil" hidden></p>
+    <p id="durum" class="durum" role="status" hidden></p>
+
+    <section id="giris" hidden>
+      <h1>Yemekhane hesabına giriş</h1>
+      <form id="giris-formu" class="kart dar">
+        <label>E-posta <input name="eposta" type="email" maxlength="120" autocomplete="username" required></label>
+        <label>Şifre <input name="sifre" type="password" autocomplete="current-password" required></label>
+        <button>Giriş yap</button>
+      </form>
+    </section>
+
+    <section id="hafta" hidden>
+      <h1>Haftalık menü ve rezervasyon</h1>
+      <label class="dar">Yemekhane <select id="hafta-yemekhane"></select></label>
+      <div id="hafta-listesi" class="izgara"></div>
+    </section>
+
+    <section id="rezervasyon" hidden>
+      <h1>Rezervasyonlarım</h1>
+      <div id="rezervasyon-listesi" class="izgara"></div>
+    </section>
+
+    <section id="bakiye" hidden>
+      <h1>Bakiye</h1>
+      <p id="bakiye-tutar" class="bakiye"></p>
+      <form id="bakiye-formu" class="kart dar">
+        <label>Yükleme tutarı (TL) <input name="tutar" type="number" min="10" max="1000" step="0.01" required></label>
+        <button>Bakiye yükle</button>
+      </form>
+      <h2>Hareket geçmişi</h2>
+      <ul id="hareketler" class="satirlar"></ul>
+    </section>
+
+    <section id="degerlendirme" hidden>
+      <h1>Menü değerlendirme</h1>
+      <div id="degerlendirme-listesi" class="izgara"></div>
+    </section>
+
+    <section id="yonetim" hidden>
+      <h1>Yönetici paneli</h1>
+      <h2 id="yonetim-form-baslik">Yeni menü</h2>
+      <form id="yonetim-formu" class="kart">
+        <input name="id" type="hidden">
+        <div class="izgara">
+          <label>Tarih <input name="tarih" type="date" required></label>
+          <label>Yemekhane <select name="yemekhaneId" required></select></label>
+          <label>Öğün <select name="ogunId" required></select></label>
+          <label>Öğrenci fiyatı (TL) <input name="ogrenci" type="number" min="0.01" max="999999.99" step="0.01" required></label>
+          <label>Personel fiyatı (TL) <input name="personel" type="number" min="0.01" max="999999.99" step="0.01" required></label>
+        </div>
+        <fieldset><legend>Yemekler</legend><div id="yemek-secimleri" class="kutular"></div></fieldset>
+        <div class="eylemler"><button>Menüyü kaydet</button><button id="yeni-menu" type="button">Yeni menüye dön</button></div>
+      </form>
+      <h2>Turnike geçişi</h2>
+      <form id="turnike-formu" class="kart dar">
+        <label>Kullanıcı ID <input name="kullaniciId" type="number" min="1" required></label>
+        <label>Yemekhane <select name="yemekhaneId" required></select></label>
+        <button>Geçişi kaydet</button>
+      </form>
+      <h2>Menüler, doluluk ve puan</h2>
+      <div id="yonetim-listesi" class="izgara"></div>
+    </section>
+  </main>
+</body>
+</html>

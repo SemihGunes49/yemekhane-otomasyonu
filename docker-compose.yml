@@ -50,7 +50,7 @@ services:
       MYSQL_USER: yemekhane_app
       MYSQL_PASSWORD: Uyg_2026
     ports:
-      - "3307:3306"
+      - "127.0.0.1:3307:3306"
     volumes:
       - ./db/init:/docker-entrypoint-initdb.d:ro
       - mysql-primary-veri:/var/lib/mysql
@@ -67,7 +67,7 @@ services:
       TZ: Europe/Istanbul
       MYSQL_ROOT_PASSWORD: yemekhane_kok
     ports:
-      - "3308:3306"
+      - "127.0.0.1:3308:3306"
     volumes:
       - mysql-replica-veri:/var/lib/mysql
 
@@ -102,7 +102,7 @@ services:
     restart: unless-stopped
     command: ["redis-server", "--appendonly", "yes"]
     ports:
-      - "6379:6379"
+      - "127.0.0.1:6379:6379"
     volumes:
       - redis-veri:/data
     healthcheck:
@@ -124,6 +124,9 @@ services:
       UYGULAMA_ADRES: http://uygulama:8000
     ports:
       - "8080:80"
+    depends_on:
+      uygulama:
+        condition: service_healthy
     volumes:
       - ./frontend:/usr/local/apache2/htdocs:ro
     healthcheck:
@@ -138,6 +141,23 @@ services:
   # 2. Uygulama container içinde 8000 portunu dinlesin (ya da UYGULAMA_ADRES'i değiştirin).
   # 3. Aşağıdaki satırların başındaki "# " işaretlerini kaldırın.
   # ---------------------------------------------------------------
+  uygulama:
+    build: ./uygulama
+    restart: unless-stopped
+    environment:
+      <<: *uygulama-ortam
+    healthcheck:
+      test: ["CMD","node","-e","fetch('http://127.0.0.1:8000/api/').then(r=>{if(!r.ok)process.exit(1)}).catch(()=>process.exit(1))"]
+      interval: 5s
+      timeout: 3s
+      retries: 10
+    depends_on:
+      mysql-primary:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+      replica-setup:
+        condition: service_completed_successfully
 
 volumes:
   mysql-primary-veri:

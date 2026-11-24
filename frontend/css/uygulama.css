@@ -1,0 +1,32 @@
+* { box-sizing: border-box; }
+:root { font-family: system-ui, sans-serif; color: #172b25; background: #f3f6f2; }
+[hidden] { display: none !important; }
+body { margin: 0; }
+.ust { display: flex; flex-wrap: wrap; justify-content: space-between; align-items: center; gap: 1rem;
+  padding: 1rem max(1rem, calc((100vw - 68rem) / 2)); background: #133e31; color: white; }
+.ust a { color: inherit; }
+.marka { font-weight: 750; text-decoration: none; }
+nav, .eylemler { display: flex; flex-wrap: wrap; align-items: center; gap: .75rem; }
+main { width: min(68rem, calc(100% - 2rem)); margin: 2rem auto; }
+h1 { font-size: clamp(1.6rem, 5vw, 2.5rem); margin-top: 0; }
+h2 { font-size: 1.2rem; }
+.izgara { display: grid; grid-template-columns: repeat(auto-fit, minmax(min(100%, 16rem), 1fr)); gap: .9rem; }
+.kart { display: grid; gap: .85rem; background: white; border: 1px solid #c8d8d0; border-radius: .75rem; padding: 1rem; min-width: 0; }
+.kart p, .kart h2 { margin: 0; }
+.dar { max-width: 26rem; }
+label { display: grid; gap: .35rem; margin-bottom: .45rem; }
+input, select, textarea, button { font: inherit; }
+input:not([type=checkbox]), select, textarea { width: 100%; min-width: 0; padding: .55rem; border: 1px solid #718b7f; border-radius: .35rem; background: white; color: #172b25; }
+button { width: fit-content; padding: .55rem .85rem; border: 1px solid #1d664c; border-radius: .4rem; background: #1d664c; color: white; cursor: pointer; }
+button:disabled { opacity: .62; cursor: default; }
+:focus-visible { outline: 3px solid #cc7c13; outline-offset: 3px; }
+.durum { border-radius: .4rem; padding: .8rem; background: #dcece1; }
+.durum.hata { background: #fae6df; color: #7c2c1b; }
+.ikincil { color: #456658; }
+.kutular { display: grid; grid-template-columns: repeat(auto-fit, minmax(min(100%, 12rem), 1fr)); gap: .4rem; }
+.kutular label { display: flex; align-items: baseline; }
+fieldset { min-width: 0; border: 1px solid #a7bdb2; border-radius: .4rem; }
+.satirlar { list-style: none; padding: 0; }
+.satirlar li { padding: .7rem 0; border-bottom: 1px solid #c8d8d0; overflow-wrap: anywhere; }
+.bakiye { font-size: 1.5rem; font-weight: 750; }
+.uyari { color: #862e1e; font-weight: 650; }

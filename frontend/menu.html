@@ -1,0 +1,36 @@
+<!doctype html>
+<html lang="tr">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Günün Menüsü</title>
+  <link rel="stylesheet" href="/css/uygulama.css">
+  <script src="/menu.js" defer></script>
+</head>
+<body>
+  <header class="ust">
+    <a class="marka" href="/">Yemekhane Otomasyonu</a>
+    <nav aria-label="Ana menü"><a href="/">Hesap</a></nav>
+  </header>
+  <main>
+    <h1>Günün Menüsü</h1>
+    <div class="izgara kart">
+      <label for="yemekhane-secimi">Yemekhane
+        <select id="yemekhane-secimi">
+          <option value="1">Merkez Yemekhanesi</option>
+          <option value="2">Mühendislik Yemekhanesi</option>
+        </select>
+      </label>
+      <label for="ogun-secimi">Öğün
+        <select id="ogun-secimi">
+          <option value="1">Kahvaltı</option>
+          <option value="2">Öğle</option>
+          <option value="3">Akşam</option>
+        </select>
+      </label>
+    </div>
+    <ul id="yemek-listesi" class="satirlar"></ul>
+    <p id="toplam-kalori" role="status"></p>
+  </main>
+</body>
+</html>

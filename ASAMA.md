@@ -1,5 +1,5 @@
-# Aşama 1
+# Aşama 2
 
-Başlangıç paketindeki Compose altyapısı ve ilk replikasyon doğrulamaları.
+Express Web API, HTML/CSS/JavaScript ekranları ve bellekte geçici oturumlar.
 
 Bu kontrol noktası teslim hazırlığında geriye dönük oluşturuldu.
