@@ -1,0 +1,25 @@
+CREATE TABLE `kullanici_alerjenleri` (
+  `kullanici_id` int unsigned NOT NULL,
+  `alerjen_id` tinyint unsigned NOT NULL,
+  PRIMARY KEY (`kullanici_id`,`alerjen_id`),
+  KEY `alerjen_id` (`alerjen_id`),
+  CONSTRAINT `kullanici_alerjenleri_ibfk_1` FOREIGN KEY (`kullanici_id`) REFERENCES `kullanicilar` (`id`) ON DELETE CASCADE,
+  CONSTRAINT `kullanici_alerjenleri_ibfk_2` FOREIGN KEY (`alerjen_id`) REFERENCES `alerjenler` (`id`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_tr_0900_ai_ci
+
+CREATE TABLE `rezervasyonlar` (
+  `id` int unsigned NOT NULL AUTO_INCREMENT,
+  `kullanici_id` int unsigned NOT NULL,
+  `menu_id` int unsigned NOT NULL,
+  `durum` enum('aktif','kullanildi','iptal') COLLATE utf8mb4_tr_0900_ai_ci NOT NULL DEFAULT 'aktif',
+  `ucret` decimal(8,2) NOT NULL,
+  `olusturma` datetime NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  `kullanma_zamani` datetime DEFAULT NULL,
+  `iptal_zamani` datetime DEFAULT NULL,
+  `porsiyon` enum('tam','yarim') COLLATE utf8mb4_tr_0900_ai_ci NOT NULL DEFAULT 'tam',
+  PRIMARY KEY (`id`),
+  UNIQUE KEY `uq_rezervasyon` (`kullanici_id`,`menu_id`),
+  KEY `ix_rezervasyon_menu_durum` (`menu_id`,`durum`),
+  CONSTRAINT `fk_rez_kullanici` FOREIGN KEY (`kullanici_id`) REFERENCES `kullanicilar` (`id`),
+  CONSTRAINT `fk_rez_menu` FOREIGN KEY (`menu_id`) REFERENCES `menuler` (`id`)
+) ENGINE=InnoDB AUTO_INCREMENT=368 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_tr_0900_ai_ci

@@ -138,7 +138,12 @@ app.get('/api/menuler/bugun', async (req, res) => {
     console.info('Menü MySQL', anahtar);
   }
   res.set('Cache-Control', 'no-store');
-  res.json(yemekler);
+  if (!req.kullanici) return res.json(yemekler);
+  const secili = new Set((await veriKatmani.alerjenleriOku(req.kullanici.id)).map(String));
+  res.json(yemekler.map(yemek => ({
+    ...yemek,
+    alerjen_uyarisi: (yemek.alerjen_idler || '').split(',').some(id => secili.has(id))
+  })));
 });
 
 app.get('/api/menuler/haftalik', giris, async (req, res) => {
@@ -157,7 +162,9 @@ app.get('/api/rezervasyonlar', giris, async (req, res) => {
 
 app.post('/api/rezervasyonlar', giris, async (req, res) => {
   const id = req.kullanici.id;
-  res.status(201).json(await veriKatmani.rezervasyonYap(id, kimlik(req.body?.menuId)));
+  const porsiyon = req.body?.porsiyon ?? 'tam';
+  if (!['tam', 'yarim'].includes(porsiyon)) throw sorun(400, 'Geçersiz porsiyon.');
+  res.status(201).json(await veriKatmani.rezervasyonYap(id, kimlik(req.body?.menuId), porsiyon));
 });
 
 app.post('/api/rezervasyonlar/:id/iptal', giris, async (req, res) => {
@@ -184,6 +191,18 @@ app.post('/api/degerlendirmeler', giris, async (req, res) => {
   const yazildi = await veriKatmani.degerlendir(id, menuId, puan, yorum.trim() || null);
   if (!yazildi) throw sorun(409, 'Yalnızca kullanılan menüler değerlendirilebilir.');
   res.status(201).json({ tamam: true });
+});
+
+app.get('/api/profil', giris, async (req, res) => {
+  res.json(await veriKatmani.alerjenleriOku(req.kullanici.id));
+});
+
+app.put('/api/profil', giris, async (req, res) => {
+  if (!Array.isArray(req.body?.alerjenler) || req.body.alerjenler.length > 100) throw sorun(400, 'Geçersiz alerjen listesi.');
+  const idler = [...new Set(req.body.alerjenler.map(kimlik))];
+  const id = req.kullanici.id;
+  await veriKatmani.alerjenleriKaydet(id, idler);
+  res.json({ tamam: true });
 });
 
 app.post('/api/yonetim/turnike', giris, yonetici, async (req, res) => {

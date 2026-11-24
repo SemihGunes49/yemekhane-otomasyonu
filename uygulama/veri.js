@@ -55,7 +55,7 @@ async function bakiyeDetay(id) {
 }
 
 function rezervasyonlar(id) {
-  return oku(`SELECT r.id,r.menu_id,r.durum,r.ucret, 'tam' AS porsiyon,d.tarih,d.yemekhane,d.ogun,
+  return oku(`SELECT r.id,r.menu_id,r.durum,r.ucret,r.porsiyon,d.tarih,d.yemekhane,d.ogun,
     NOW() < d.rezervasyon_son AS sure_var, deg.puan
     FROM rezervasyonlar r JOIN v_menu_doluluk d ON d.menu_id=r.menu_id
     LEFT JOIN degerlendirmeler deg ON deg.menu_id=r.menu_id AND deg.kullanici_id=r.kullanici_id
@@ -67,6 +67,19 @@ async function degerlendir(id, menuId, puan, yorum) {
     SELECT kullanici_id,menu_id,?,? FROM rezervasyonlar WHERE kullanici_id=? AND menu_id=? AND durum='kullanildi'`,
     [puan, yorum, id, menuId]);
   return sonuc.affectedRows > 0;
+}
+
+async function alerjenleriOku(id) {
+  const satirlar = await yaz('SELECT alerjen_id FROM kullanici_alerjenleri WHERE kullanici_id=? ORDER BY alerjen_id', [id]);
+  return satirlar.map(satir => satir.alerjen_id);
+}
+
+function alerjenleriKaydet(id, idler) {
+  return islem(async sorgu => {
+    await sorgu('SELECT id FROM kullanicilar WHERE id=? FOR UPDATE', [id]);
+    await sorgu('DELETE FROM kullanici_alerjenleri WHERE kullanici_id=?', [id]);
+    for (const alerjenId of idler) await sorgu('INSERT INTO kullanici_alerjenleri VALUES (?,?)', [id, alerjenId]);
+  });
 }
 
 async function kaynakGtid() {
@@ -81,8 +94,8 @@ async function replikayiBekle(gtid) {
 
 module.exports = {
   oku, yaz, islem, hesap, secenekler, bakiyeDetay, rezervasyonlar, degerlendir,
-  kaynakGtid, replikayiBekle,
-  rezervasyonYap: (id, menuId) => yordam('CALL sp_rezervasyon_yap(?,?)', [id, menuId], id),
+  alerjenleriOku, alerjenleriKaydet, kaynakGtid, replikayiBekle,
+  rezervasyonYap: (id, menuId, porsiyon) => yordam('CALL sp_rezervasyon_yap(?,?,?)', [id, menuId, porsiyon], id),
   rezervasyonIptal: (id, rezervasyonId) => yordam('CALL sp_rezervasyon_iptal(?,?)', [id, rezervasyonId], id),
   turnikeGecis: async (id, yemekhaneId) => {
     const [satirlar] = await yaz('CALL sp_turnike_gecis(?,?,NULL)', [id, yemekhaneId]);

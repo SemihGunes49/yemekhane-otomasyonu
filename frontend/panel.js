@@ -1,6 +1,6 @@
 const eleman = id => document.getElementById(id);
 const para = new Intl.NumberFormat('tr-TR', { style: 'currency', currency: 'TRY' });
-const bolumler = ['giris', 'hafta', 'rezervasyon', 'bakiye', 'degerlendirme', 'yonetim'];
+const bolumler = ['giris', 'hafta', 'rezervasyon', 'bakiye', 'degerlendirme', 'profil', 'yonetim'];
 const yonetimFormu = eleman('yonetim-formu');
 const haftaSecimi = eleman('hafta-yemekhane');
 let kullanici;
@@ -91,9 +91,18 @@ async function haftayiGoster(no) {
       return alan;
     }
     const form = oge('form', '');
-    form.append(oge('button', 'Rezervasyon yap'));
-    formIsle(form, async () => {
-      const sonuc = await api('/rezervasyonlar', 'POST', { menuId: menu.menu_id });
+    const etiket = oge('label', 'Porsiyon');
+    const porsiyon = document.createElement('select');
+    porsiyon.name = 'porsiyon';
+    porsiyon.append(new Option('Tam', 'tam'));
+    if ([2, 3].includes(menu.ogun_id)) {
+      const yarim = Math.round(Math.round(Number(menu.fiyat) * 100) * 60 / 100) / 100;
+      porsiyon.append(new Option('Yarım · ' + para.format(yarim), 'yarim'));
+    }
+    etiket.append(porsiyon);
+    form.append(etiket, oge('button', 'Rezervasyon yap'));
+    formIsle(form, async veri => {
+      const sonuc = await api('/rezervasyonlar', 'POST', { menuId: menu.menu_id, porsiyon: veri.get('porsiyon') });
       mesaj('Rezervasyon yapıldı. Güncel bakiye ' + para.format(sonuc.bakiye));
       if (no === ekranNo) await haftayiGoster(no);
     });
@@ -166,6 +175,12 @@ async function degerlendirmeleriGoster(no) {
   listele(eleman('degerlendirme-listesi'), kartlar, 'Değerlendirilebilecek kullanılmış menü yok.');
 }
 
+async function profiliGoster(no) {
+  const secili = new Set((await api('/profil')).map(String));
+  if (no !== ekranNo) return;
+  for (const kutu of eleman('alerjen-secimleri').querySelectorAll('input')) kutu.checked = secili.has(kutu.value);
+}
+
 function yeniMenu() {
   yonetimFormu.reset();
   yonetimFormu.elements.id.value = '';
@@ -212,7 +227,7 @@ async function ekraniGoster() {
   eleman('kullanici').textContent = kullanici ? kullanici.ad + ' ' + kullanici.soyad : '';
   const yukleyici = {
     hafta: haftayiGoster, rezervasyon: rezervasyonlariGoster, bakiye: bakiyeyiGoster,
-    degerlendirme: degerlendirmeleriGoster, yonetim: yonetimiGoster
+    degerlendirme: degerlendirmeleriGoster, profil: profiliGoster, yonetim: yonetimiGoster
   }[ekran];
   if (yukleyici) await yukleyici(no);
 }
@@ -236,6 +251,11 @@ formIsle(eleman('bakiye-formu'), async veri => {
   eleman('bakiye-formu').reset();
   mesaj('Yükleme tamamlandı. Güncel bakiye ' + para.format(sonuc.bakiye));
   await bakiyeyiGoster(ekranNo);
+});
+
+formIsle(eleman('profil-formu'), async veri => {
+  await api('/profil', 'PUT', { alerjenler: veri.getAll('alerjen') });
+  mesaj('Alerjen tercihlerin kaydedildi.');
 });
 
 formIsle(yonetimFormu, async veri => {
@@ -266,5 +286,6 @@ calistir(async () => {
   secenekler(yonetimFormu.elements.yemekhaneId, secimler.yemekhaneler);
   secenekler(yonetimFormu.elements.ogunId, secimler.ogunler);
   kutular(eleman('yemek-secimleri'), secimler.yemekler, 'yemek');
+  kutular(eleman('alerjen-secimleri'), secimler.alerjenler, 'alerjen');
   await ekraniGoster();
 });

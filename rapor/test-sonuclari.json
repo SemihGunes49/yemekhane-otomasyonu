@@ -1,0 +1,46 @@
+{
+  "sonuc": 0,
+  "results": [
+    {
+      "ad": "Migration / replika",
+      "metin": "SHOW CREATE TABLE ile porsiyon ve kullanici_alerjenleri doğrulandı. 367 eski rezervasyon tam kaldı."
+    },
+    {
+      "ad": "bcrypt / Redis oturum",
+      "metin": "Yanlış şifre 401; yönetici yetkisi 403; oturum TTL 30 saniyeden yaklaşık 1800 saniyeye yenilendi."
+    },
+    {
+      "ad": "Önbellek / profil",
+      "metin": "İlk istek MySQL, ikinci Redis. menu:1:2026-11-24:1 TTL=13177 s. Kişisel alerjen uyarısı ortak önbelleğe girmedi."
+    },
+    {
+      "ad": "Yönetim / invalidation",
+      "metin": "Oluşturma 201, düzenleme 200. Düzenlemeden sonra eski Redis anahtarı silindi ve yeni yemek API üzerinden görüldü."
+    },
+    {
+      "ad": "Rezervasyon / bakiye",
+      "metin": "Yükleme +100 TL; yarım porsiyon fiyatı 24.00 TL; iptal iadesi bakiyeyi geri getirdi. Kahvaltıda yarım porsiyon 409."
+    },
+    {
+      "ad": "Turnike",
+      "metin": "Yordam aktif rezervasyonu kullanıldı durumuna aldı; öğrenci yönetim uç noktasında 403 aldı."
+    },
+    {
+      "ad": "Değerlendirme",
+      "metin": "Kullanılmış menüye puan 201, ikinci değerlendirme 409."
+    },
+    {
+      "ad": "Yeniden başlatma / çıkış",
+      "metin": "Node süreci kapatılıp yeniden açıldı, aynı Redis oturumu çalıştı; çıkış anahtarı sildi."
+    },
+    {
+      "ad": "Arayüz DOM",
+      "metin": "Giriş formu gönderildi. Haftalık menü kartları ve bakiye ekranı gerçek API üzerinden DOM’a yerleşti."
+    },
+    {
+      "ad": "Chrome 400 px",
+      "metin": "Sekiz ekran gerçek API ile açıldı, yatay taşma yok. Görüntüler rapor/ekranlar klasöründe."
+    }
+  ],
+  "appLog": "(node:14756) [UNDICI-EHPA] Warning: EnvHttpProxyAgent is experimental, expect them to change at any time.\n(Use `node --trace-warnings ...` to show where the warning was created)\nYemekhane API hazır.\nMenü MySQL menu:1:2026-11-24:1\nMenü Redis menu:1:2026-11-24:1\nMenü Redis menu:1:2026-11-24:1\nMenü MySQL menu:1:2026-11-24:1\n(node:29024) [UNDICI-EHPA] Warning: EnvHttpProxyAgent is experimental, expect them to change at any time.\n(Use `node --trace-warnings ...` to show where the warning was created)\nYemekhane API hazır.\nMenü Redis menu:1:2026-11-24:1\n"
+}

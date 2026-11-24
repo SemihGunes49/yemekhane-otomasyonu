@@ -1,3 +1,7 @@
+# Yemekhane Otomasyonu — Web API
+
+Tam uygulamayı çalıştırmak için [teslim ve gösterim notlarına](TESLIM.md) bakın.
+
 # Yemekhane Otomasyonu · Başlangıç Paketi
 
 Web Teknolojileri dönem ödevinin hazır altyapısı. Veritabanı şeması, örnek veri, kaynak-replika

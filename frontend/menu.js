@@ -25,6 +25,12 @@ async function menuyuYukle() {
       madde.textContent = kayit.yemek + ' (' + kayit.kalori + ' kcal)';
       if (kayit.vejetaryen === 1) madde.textContent += ' · Vejetaryen';
       if (kayit.alerjenler) madde.textContent += ' · Alerjenler: ' + kayit.alerjenler;
+      if (kayit.alerjen_uyarisi) {
+        const uyari = document.createElement('strong');
+        uyari.className = 'uyari';
+        uyari.textContent = ' · Profilindeki alerjenlerden en az birini içeriyor';
+        madde.append(uyari);
+      }
       liste.append(madde);
       toplamKalori += kayit.kalori ?? 0;
     }

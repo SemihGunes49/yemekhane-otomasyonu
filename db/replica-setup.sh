@@ -22,8 +22,19 @@ R=(mysql --default-character-set=utf8mb4 -uroot -h "$REPLICA_HOST" -P "$REPLICA_
 
 log() { echo "[replica-setup] $*"; }
 
+# Apply the migration on the primary before snapshot or synchronization.
+if [[ -f /migrations/04_degisiklik.sql ]]; then
+    surum=$("${P[@]}" -N "$DB" -e "SELECT COUNT(*) FROM information_schema.parameters WHERE specific_schema=DATABASE() AND specific_name='sp_rezervasyon_yap' AND parameter_name='p_porsiyon'")
+    if [[ "$surum" != "1" ]]; then
+        "${P[@]}" "$DB" < /migrations/04_degisiklik.sql
+        log "Migration 04 kaynakta uygulandı."
+    fi
+fi
+
 # --- 0. Zaten kurulu mu? ---------------------------------------------
 if [ -n "$("${R[@]}" -N -e "SHOW REPLICA STATUS")" ]; then
+    gtid=$("${P[@]}" -N -e "SELECT @@GLOBAL.gtid_executed")
+    [[ "$("${R[@]}" -N -e "SELECT WAIT_FOR_EXECUTED_GTID_SET('$gtid',60)")" == "0" ]]
     log "Replika zaten yapılandırılmış, işlem yapılmadı."
     exit 0
 fi
